@@ -1,0 +1,230 @@
+{
+  "62080766-0905-4528-a285-ffc920b2e893": {
+    "score": 0,
+    "total": 5,
+    "difficulty": "medium",
+    "quiz_type": "mcq",
+    "weak_topics": [
+      "Intern Overview",
+      "Task Status",
+      "Contact Information",
+      "Metric Value"
+    ],
+    "questions": [
+      {
+        "answer": "Sajja Rangavallika",
+        "explanation": "The intern's name is mentioned in the report as Sajja Rangavallika.",
+        "options": [
+          "Sajja Rangavallika",
+          "P. Abhishek",
+          "Sajja Abhishek",
+          "Rangavallika Sajja"
+        ],
+        "question": "What is the name of the intern mentioned in the report?",
+        "topic": "Intern Overview",
+        "type": "mcq"
+      },
+      {
+        "answer": "Artificial Intelligence",
+        "explanation": "The domain of the internship is Artificial Intelligence.",
+        "options": [
+          "Artificial Intelligence",
+          "Data Science",
+          "Machine Learning",
+          "Cyber Security"
+        ],
+        "question": "What is the domain of the internship?",
+        "topic": "Intern Overview",
+        "type": "mcq"
+      },
+      {
+        "answer": "6",
+        "explanation": "The intern was allocated 6 tasks.",
+        "options": [
+          "4",
+          "5",
+          "6",
+          "7"
+        ],
+        "question": "How many tasks were allocated to the intern?",
+        "topic": "Task Status",
+        "type": "mcq"
+      },
+      {
+        "answer": "hr@slashmark.in",
+        "explanation": "The email address of the HR contact is hr@slashmark.in.",
+        "options": [
+          "hr@slashmark.in",
+          "info@slashmark.in",
+          "sajjarangavallika92@gmail.com",
+          "abhishek@slashmark.in"
+        ],
+        "question": "What is the email address of the Human Resources (HR) contact?",
+        "topic": "Contact Information",
+        "type": "mcq"
+      },
+      {
+        "answer": "4",
+        "explanation": "The intern attempted 4 quizzes.",
+        "options": [
+          "2",
+          "3",
+          "4",
+          "5"
+        ],
+        "question": "How many quizzes were attempted by the intern?",
+        "topic": "Metric Value",
+        "type": "mcq"
+      }
+    ],
+    "answers": [
+      {
+        "questionIdx": 0,
+        "isCorrect": false,
+        "topic": "Intern Overview",
+        "selectedAnswer": ""
+      },
+      {
+        "questionIdx": 1,
+        "isCorrect": false,
+        "topic": "Intern Overview",
+        "selectedAnswer": ""
+      },
+      {
+        "questionIdx": 2,
+        "isCorrect": false,
+        "topic": "Task Status",
+        "selectedAnswer": ""
+      },
+      {
+        "questionIdx": 3,
+        "isCorrect": false,
+        "topic": "Contact Information",
+        "selectedAnswer": ""
+      },
+      {
+        "questionIdx": 4,
+        "isCorrect": false,
+        "topic": "Metric Value",
+        "selectedAnswer": ""
+      }
+    ],
+    "timestamp": "2026-07-03T11:17:09.886456",
+    "date": "2026-07-03T05:47:09.325Z",
+    "id": "62080766-0905-4528-a285-ffc920b2e893"
+  },
+  "9055f69a-ec4f-42fa-9148-61324cb561da": {
+    "score": 0,
+    "total": 5,
+    "difficulty": "medium",
+    "quiz_type": "mcq",
+    "weak_topics": [
+      "Intern Overview",
+      "Task Status",
+      "Contact Information",
+      "Metric Value"
+    ],
+    "questions": [
+      {
+        "answer": "Sajja Rangavallika",
+        "explanation": "The intern's name is mentioned in the report as Sajja Rangavallika.",
+        "options": [
+          "Sajja Rangavallika",
+          "P. Abhishek",
+          "Sajja Abhishek",
+          "Rangavallika Sajja"
+        ],
+        "question": "What is the name of the intern mentioned in the report?",
+        "topic": "Intern Overview",
+        "type": "mcq"
+      },
+      {
+        "answer": "Artificial Intelligence",
+        "explanation": "The domain of the internship is Artificial Intelligence.",
+        "options": [
+          "Artificial Intelligence",
+          "Data Science",
+          "Machine Learning",
+          "Cyber Security"
+        ],
+        "question": "What is the domain of the internship?",
+        "topic": "Intern Overview",
+        "type": "mcq"
+      },
+      {
+        "answer": "6",
+        "explanation": "The intern was allocated 6 tasks.",
+        "options": [
+          "4",
+          "5",
+          "6",
+          "7"
+        ],
+        "question": "How many tasks were allocated to the intern?",
+        "topic": "Task Status",
+        "type": "mcq"
+      },
+      {
+        "answer": "hr@slashmark.in",
+        "explanation": "The email address of the HR contact is hr@slashmark.in.",
+        "options": [
+          "hr@slashmark.in",
+          "info@slashmark.in",
+          "sajjarangavallika92@gmail.com",
+          "abhishek@slashmark.in"
+        ],
+        "question": "What is the email address of the Human Resources (HR) contact?",
+        "topic": "Contact Information",
+        "type": "mcq"
+      },
+      {
+        "answer": "4",
+        "explanation": "The intern attempted 4 quizzes.",
+        "options": [
+          "2",
+          "3",
+          "4",
+          "5"
+        ],
+        "question": "How many quizzes were attempted by the intern?",
+        "topic": "Metric Value",
+        "type": "mcq"
+      }
+    ],
+    "answers": [
+      {
+        "questionIdx": 0,
+        "isCorrect": false,
+        "topic": "Intern Overview",
+        "selectedAnswer": ""
+      },
+      {
+        "questionIdx": 1,
+        "isCorrect": false,
+        "topic": "Intern Overview",
+        "selectedAnswer": ""
+      },
+      {
+        "questionIdx": 2,
+        "isCorrect": false,
+        "topic": "Task Status",
+        "selectedAnswer": ""
+      },
+      {
+        "questionIdx": 3,
+        "isCorrect": false,
+        "topic": "Contact Information",
+        "selectedAnswer": ""
+      },
+      {
+        "questionIdx": 4,
+        "isCorrect": false,
+        "topic": "Metric Value",
+        "selectedAnswer": ""
+      }
+    ],
+    "timestamp": "2026-07-03T11:17:09.942336",
+    "date": "2026-07-03T05:47:09.321Z",
+    "id": "9055f69a-ec4f-42fa-9148-61324cb561da"
+  }
+}

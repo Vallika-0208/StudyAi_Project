@@ -1,0 +1,195 @@
+{
+  "current_plan": {
+    "planner": [
+      {
+        "day": "Day 1",
+        "tasks": [
+          {
+            "id": "task1",
+            "task": "Review Flask framework documentation",
+            "duration": 60,
+            "break_duration": 10,
+            "priority": "High",
+            "type": "Study",
+            "completed": false
+          },
+          {
+            "id": "task2",
+            "task": "Set up Flask project structure",
+            "duration": 30,
+            "break_duration": 5,
+            "priority": "Medium",
+            "type": "Revision",
+            "completed": false
+          }
+        ],
+        "ai_tips": [
+          "Focus on understanding Flask routing and templating",
+          "Use a virtual environment for your project"
+        ]
+      },
+      {
+        "day": "Day 2",
+        "tasks": [
+          {
+            "id": "task3",
+            "task": "Implement user registration and login functionality",
+            "duration": 90,
+            "break_duration": 15,
+            "priority": "High",
+            "type": "Study",
+            "completed": false
+          },
+          {
+            "id": "task4",
+            "task": "Review MongoDB database design",
+            "duration": 45,
+            "break_duration": 10,
+            "priority": "Medium",
+            "type": "Revision",
+            "completed": false
+          }
+        ],
+        "ai_tips": [
+          "Use Flask-WTF for form handling and validation",
+          "Consider using MongoDB Atlas for cloud-based database management"
+        ]
+      },
+      {
+        "day": "Day 3",
+        "tasks": [
+          {
+            "id": "task5",
+            "task": "Develop lost and found item management functionality",
+            "duration": 120,
+            "break_duration": 20,
+            "priority": "High",
+            "type": "Study",
+            "completed": false
+          },
+          {
+            "id": "task6",
+            "task": "Review JavaScript and HTML/CSS basics",
+            "duration": 60,
+            "break_duration": 10,
+            "priority": "Medium",
+            "type": "Revision",
+            "completed": false
+          }
+        ],
+        "ai_tips": [
+          "Use JavaScript for client-side validation and dynamic updates",
+          "Consider using a frontend framework like Bootstrap for responsive design"
+        ]
+      },
+      {
+        "day": "Day 4",
+        "tasks": [
+          {
+            "id": "task7",
+            "task": "Implement search and filter functionality",
+            "duration": 90,
+            "break_duration": 15,
+            "priority": "High",
+            "type": "Study",
+            "completed": false
+          },
+          {
+            "id": "task8",
+            "task": "Review Flask security best practices",
+            "duration": 45,
+            "break_duration": 10,
+            "priority": "Medium",
+            "type": "Revision",
+            "completed": false
+          }
+        ],
+        "ai_tips": [
+          "Use Flask-SQLAlchemy for database querying and modeling",
+          "Consider using a library like Flask-Login for user authentication"
+        ]
+      },
+      {
+        "day": "Day 5",
+        "tasks": [
+          {
+            "id": "task9",
+            "task": "Develop messaging system for users",
+            "duration": 120,
+            "break_duration": 20,
+            "priority": "High",
+            "type": "Study",
+            "completed": false
+          },
+          {
+            "id": "task10",
+            "task": "Review project progress and plan next steps",
+            "duration": 60,
+            "break_duration": 10,
+            "priority": "Medium",
+            "type": "Revision",
+            "completed": false
+          }
+        ],
+        "ai_tips": [
+          "Use a library like Flask-Mail for email notifications",
+          "Consider using a project management tool like Trello for organization"
+        ]
+      },
+      {
+        "day": "Day 6",
+        "tasks": [
+          {
+            "id": "task11",
+            "task": "Implement item return workflow and feedback system",
+            "duration": 90,
+            "break_duration": 15,
+            "priority": "High",
+            "type": "Study",
+            "completed": false
+          },
+          {
+            "id": "task12",
+            "task": "Review JavaScript and HTML/CSS best practices",
+            "duration": 45,
+            "break_duration": 10,
+            "priority": "Medium",
+            "type": "Revision",
+            "completed": false
+          }
+        ],
+        "ai_tips": [
+          "Use a library like Flask-WTF for form handling and validation",
+          "Consider using a code linter like ESLint for JavaScript code quality"
+        ]
+      },
+      {
+        "day": "Day 7",
+        "tasks": [
+          {
+            "id": "task13",
+            "task": "Finalize project and prepare for deployment",
+            "duration": 120,
+            "break_duration": 20,
+            "priority": "High",
+            "type": "Study",
+            "completed": false
+          },
+          {
+            "id": "task14",
+            "task": "Review project documentation and user guides",
+            "duration": 60,
+            "break_duration": 10,
+            "priority": "Medium",
+            "type": "Revision",
+            "completed": false
+          }
+        ],
+        "ai_tips": [
+          "Consider using a cloud platform like Heroku for deployment",
+          "Use a version control system like Git for code management"
+        ]
+      }
+    ]
+  }
+}
