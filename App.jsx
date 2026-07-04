@@ -18,7 +18,11 @@ ChartJS.register(
   Legend
 );
 
-const API_BASE = const API_BASE = 'https://studyai-project-zbv6.onrender.com/api';
+// Patha URL (http://localhost:5000) ni tecesi idi pettandi
+const API_URL = import.meta.env.VITE_API_URL;
+
+// Mee requests ila undali:
+// axios.get(`${API_URL}/your-endpoint`)
 
 export default function App() {
   const navigate = useNavigate();
