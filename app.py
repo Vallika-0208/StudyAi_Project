@@ -1,4 +1,7 @@
 import os
+import os
+os.environ.pop("HTTP_PROXY", None)
+os.environ.pop("HTTPS_PROXY", None)
 import io
 import uuid
 import json
