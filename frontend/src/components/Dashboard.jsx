@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './Dashboard.css';
 
-const API_BASE = 'http://localhost:5000/api';
+const API_BASE = "https://studyai-project-1-m806.onrender.com/api";
 
 export default function Dashboard() {
   // Backend Connection State

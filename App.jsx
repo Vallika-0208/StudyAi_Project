@@ -18,8 +18,8 @@ ChartJS.register(
   Legend
 );
 
-// Patha URL (http://localhost:5000) ni tecesi idi pettandi
-const API_URL = import.meta.env.VITE_API_URL;
+
+const API_BASE = "https://studyai-project-1-m806.onrender.com/api";
 
 // Mee requests ila undali:
 // axios.get(`${API_URL}/your-endpoint`)
