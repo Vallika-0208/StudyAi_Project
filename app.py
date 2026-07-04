@@ -228,7 +228,10 @@ def chat():
     full_messages = [system_msg] + messages
 
     try:
-        client = Groq(api_key=api_key)
+        client = Groq(
+             api_key=api_key,
+             http_client= httpx.Client(proxies={})
+        )
         completion = client.chat.completions.create(
             model="llama-3.3-70b-versatile",
             messages=full_messages,
@@ -322,7 +325,10 @@ def generate_summary():
         return jsonify({"error": "No text content found to summarize"}), 400
 
     try:
-        client = Groq(api_key=api_key)
+        client = Groq(
+              api_key=api_key,
+              http_client=httpx.Client(proxies={})
+        )
         system_prompt = (
             "You are an expert academic tutor. Generate a highly structured study summary based on the text provided by the user. "
             "The summary MUST contain the following sections in clean Markdown format:\n\n"
@@ -390,7 +396,11 @@ def generate_quiz():
         return jsonify({"error": "Missing 'text' or 'material_id' in request body"}), 400
 
     try:
-        client = Groq(api_key=api_key)
+        client = Groq(
+             api_key=api_key,
+             http_client=httpx.Client(proxies={})
+        )
+     
         system_prompt = (
             f"You are an expert educator. Generate a JSON object containing a 'quiz' key.\n"
             f"The 'quiz' value must be a list of exactly {num_questions} questions based on the text provided by the user.\n"
@@ -469,7 +479,10 @@ def generate_flashcards():
         return jsonify({"error": "Missing 'text' or 'material_id' in request body"}), 400
 
     try:
-        client = Groq(api_key=api_key)
+        client = Groq(
+             api_key=api_key,
+             http_client=httpx.Client(proxies={})
+        )
         system_prompt = (
             "You are an expert tutor. Generate a JSON object containing a 'flashcards' key. "
             "The 'flashcards' value must be a list of exactly 8 flashcards based on the key concepts in the text provided. "
@@ -532,7 +545,10 @@ def generate_planner():
         return jsonify({"error": "Missing 'text' or 'material_id' in request body"}), 400
 
     try:
-        client = Groq(api_key=api_key)
+        client = Groq(
+             api_key=api_key,
+             http_client=httpx.Client(proxies={})
+        )
         system_prompt = (
             "You are an expert academic advisor. Generate a JSON object containing a 'planner' key.\n"
             "The 'planner' value must be an intelligent 7-day study plan based on the key topics in the text provided.\n"
@@ -702,7 +718,11 @@ def generate_insights():
     )
 
     try:
-        client = Groq(api_key=api_key)
+        
+        client = Groq(
+            api_key=api_key,
+            http_client=httpx.Client(proxies={})
+        )
         completion = client.chat.completions.create(
             model="llama-3.3-70b-versatile",
             messages=[{"role": "user", "content": prompt}],
