@@ -42,7 +42,8 @@ load_dotenv()
 app = Flask(__name__)
 
 # Enable CORS for all routes (configured to allow local web development origins)
-CORS(app, resources={r"/api/*": {"origins": "*"}})
+# పాత లైన్ ని తీసేసి, యాప్ లో ఉన్న అన్ని రూట్లకు పర్మిషన్ ఇవ్వడానికి ఇలా మార్చండి:
+CORS(app, resources={r"/*": {"origins": "*"}})
 
 # Read Groq API key from environment
 api_key = os.environ.get("GROQ_API_KEY")
