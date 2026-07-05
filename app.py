@@ -1,10 +1,11 @@
 import os
 import sys
-
-# Clear physical environment variables (Both Uppercase & Lowercase)
-for env_key in list(os.environ.keys()):
-    if env_key.lower() in ["http_proxy", "https_proxy", "all_proxy"]:
-        os.environ.pop(env_key, None)
+os.environ.pop("HTTP_PROXY", None)
+os.environ.pop("HTTPS_PROXY", None)
+os.environ.pop("http_proxy", None)
+os.environ.pop("https_proxy", None)
+os.environ.pop("ALL_PROXY", None)
+os.environ.pop("all_proxy", None)
 
 import httpx
 import io
