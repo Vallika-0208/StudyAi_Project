@@ -1,4 +1,9 @@
 import os
+import sys
+os.environ["HTTP_PROXY"] = ""
+os.environ["HTTPS_PROXY"] = ""
+os.environ.pop("HTTP_PROXY", None)
+os.environ.pop("HTTPS_PROXY", None)
 import httpx
 import io
 import uuid
@@ -228,7 +233,6 @@ def chat():
     try:
         client = Groq(
              api_key=api_key,
-             http_client= httpx.Client(proxies={})
         )
         completion = client.chat.completions.create(
             model="llama-3.3-70b-versatile",
@@ -325,7 +329,6 @@ def generate_summary():
     try:
         client = Groq(
               api_key=api_key,
-              http_client=httpx.Client(proxies={})
         )
         system_prompt = (
             "You are an expert academic tutor. Generate a highly structured study summary based on the text provided by the user. "
@@ -396,7 +399,6 @@ def generate_quiz():
     try:
         client = Groq(
              api_key=api_key,
-             http_client=httpx.Client(proxies={})
         )
      
         system_prompt = (
@@ -479,7 +481,6 @@ def generate_flashcards():
     try:
         client = Groq(
              api_key=api_key,
-             http_client=httpx.Client(proxies={})
         )
         system_prompt = (
             "You are an expert tutor. Generate a JSON object containing a 'flashcards' key. "
@@ -545,7 +546,6 @@ def generate_planner():
     try:
         client = Groq(
              api_key=api_key,
-             http_client=httpx.Client(proxies={})
         )
         system_prompt = (
             "You are an expert academic advisor. Generate a JSON object containing a 'planner' key.\n"
@@ -719,7 +719,6 @@ def generate_insights():
         
         client = Groq(
             api_key=api_key,
-            http_client=httpx.Client(proxies={})
         )
         completion = client.chat.completions.create(
             model="llama-3.3-70b-versatile",
