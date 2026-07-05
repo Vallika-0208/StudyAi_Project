@@ -326,20 +326,22 @@ def generate_quiz():
         return jsonify({"error": "Missing 'text' or 'material_id' in request body"}), 400
 
     try:
+        # ఇక్కడ మనం ప్రాంప్ట్‌ని చాలా స్ట్రిక్ట్‌గా మారుస్తున్నాం
         system_prompt = (
-            f"You are an expert educator. Generate a JSON object containing a 'quiz' key.\n"
+            f"You are an expert educator. Your task is to generate a JSON object containing a single key 'quiz'.\n"
             f"The 'quiz' value must be a list of exactly {num_questions} questions based on the text provided.\n"
             f"The quiz difficulty must be {difficulty} level.\n"
             f"The quiz format must be {quiz_type}.\n"
         )
         if quiz_type == "mcq":
-            system_prompt += "- 'options': array of 4 strings\n- 'answer': matching one option\n"
+            system_prompt += "- Each question must have 'question' (string), 'options' (array of 4 strings), and 'answer' (string matching exactly one option).\n"
         elif quiz_type == "tf":
-            system_prompt += "- 'options': ['True', 'False']\n- 'answer': 'True' or 'False'\n"
+            system_prompt += "- Each question must have 'question' (string), 'options': ['True', 'False'], and 'answer': 'True' or 'False'.\n"
         elif quiz_type == "short":
-            system_prompt += "- 'answer': brief answer string\n"
+            system_prompt += "- Each question must have 'question' (string) and 'answer' (brief answer string).\n"
             
-        system_prompt += "\nOnly return the raw JSON object."
+        # మోడల్ ఎక్స్‌ట్రా సోది రాయకుండా ఉండేలా ఆఖరి వార్నింగ్
+        system_prompt += "\nCRITICAL: Do NOT include any introductory text, conversation, or explanations outside the JSON object. Return ONLY the raw valid JSON object starting with { and ending with }."
         
         msgs = [
             {"role": "system", "content": system_prompt},
@@ -350,7 +352,6 @@ def generate_quiz():
         return jsonify(quiz_data)
     except Exception as e:
         return jsonify({"error": f"Failed to generate quiz: {str(e)}"}), 500
-
 
 @app.route("/api/generate-flashcards", methods=["POST"])
 def generate_flashcards():
@@ -368,9 +369,12 @@ def generate_flashcards():
         return jsonify({"error": "Missing 'text' or 'material_id' in request body"}), 400
 
     try:
+        # ఇక్కడ ప్రాంప్ట్‌ని స్ట్రిక్ట్‌గా మారుస్తున్నాం రా
         system_prompt = (
-            "You are an expert tutor. Generate a JSON object containing a 'flashcards' key with 8 cards. "
-            "Keys per card: 'id', 'front', 'back', 'difficulty', 'topic'."
+            "You are an expert tutor. Your task is to generate a JSON object containing a single key 'flashcards' with exactly 8 cards.\n"
+            "Each card in the list must be an object with these exact keys: 'id', 'front', 'back', 'difficulty', 'topic'.\n"
+            "CRITICAL: Do NOT include any introductory text, conversation, or explanations outside the JSON object. "
+            "Return ONLY the raw valid JSON object starting with { and ending with }."
         )
         msgs = [
             {"role": "system", "content": system_prompt},
@@ -381,7 +385,6 @@ def generate_flashcards():
         return jsonify(flash_data)
     except Exception as e:
         return jsonify({"error": f"Failed to generate flashcards: {str(e)}"}), 500
-
 
 @app.route("/api/generate-planner", methods=["POST"])
 def generate_planner():
