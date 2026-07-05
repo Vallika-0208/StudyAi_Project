@@ -1,9 +1,11 @@
 import os
 import sys
+
 # Clear physical environment variables (Both Uppercase & Lowercase)
 for env_key in list(os.environ.keys()):
     if env_key.lower() in ["http_proxy", "https_proxy", "all_proxy"]:
         os.environ.pop(env_key, None)
+
 import httpx
 import io
 import uuid
@@ -226,8 +228,7 @@ def chat():
 
     try:
         client = Groq(
-             api_key=api_key,
-             http_client=httpx.Client(proxies={})
+             api_key=api_key
         )
         completion = client.chat.completions.create(
             model="llama-3.3-70b-versatile",
@@ -319,8 +320,7 @@ def generate_summary():
 
     try:
         client = Groq(
-              api_key=api_key,
-              http_client=httpx.Client(proxies={})
+              api_key=api_key
         )
         system_prompt = (
             "You are an expert academic tutor. Generate a highly structured study summary based on the text provided by the user. "
@@ -374,8 +374,7 @@ def generate_quiz():
 
     try:
         client = Groq(
-             api_key=api_key,
-             http_client=httpx.Client(proxies={})
+             api_key=api_key
         )
      
         system_prompt = (
@@ -436,8 +435,7 @@ def generate_flashcards():
 
     try:
         client = Groq(
-             api_key=api_key,
-             http_client=httpx.Client(proxies={})
+             api_key=api_key
         )
         system_prompt = (
             "You are an expert tutor. Generate a JSON object containing a 'flashcards' key with 8 cards. "
@@ -486,8 +484,7 @@ def generate_planner():
 
     try:
         client = Groq(
-             api_key=api_key,
-             http_client=httpx.Client(proxies={})
+             api_key=api_key
         )
         system_prompt = "You are an expert academic advisor. Generate a JSON object containing a 'planner' key for 7 days."
         
@@ -621,8 +618,7 @@ def generate_insights():
 
     try:
         client = Groq(
-            api_key=api_key,
-            http_client=httpx.Client(proxies={})
+            api_key=api_key
         )
         completion = client.chat.completions.create(
             model="llama-3.3-70b-versatile",
