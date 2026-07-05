@@ -1,9 +1,9 @@
 import os
 import sys
-os.environ["HTTP_PROXY"] = ""
-os.environ["HTTPS_PROXY"] = ""
-os.environ.pop("HTTP_PROXY", None)
-os.environ.pop("HTTPS_PROXY", None)
+# Clear physical environment variables (Both Uppercase & Lowercase)
+for env_key in list(os.environ.keys()):
+    if env_key.lower() in ["http_proxy", "https_proxy", "all_proxy"]:
+        os.environ.pop(env_key, None)
 import httpx
 import io
 import uuid
