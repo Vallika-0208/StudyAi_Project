@@ -164,9 +164,16 @@ def call_groq_api(messages, temperature=0.7, max_tokens=1024, response_format=No
     if not api_key:
         raise ValueError("Groq API Key is not configured.")
         
+    clean_api_key = api_key.strip()
+        
+
+    if response_format and response_format.get("type") == "json_object":
+        if messages and messages[0]["role"] == "system":
+            messages[0]["content"] += "\nReturn the response as a valid JSON object."
+        
     url = "https://api.groq.com/openai/v1/chat/completions"
     headers = {
-        "Authorization": f"Bearer {api_key}",
+        "Authorization": f"Bearer {clean_api_key}",
         "Content-Type": "application/json"
     }
     payload = {
@@ -178,14 +185,13 @@ def call_groq_api(messages, temperature=0.7, max_tokens=1024, response_format=No
     if response_format:
         payload["response_format"] = response_format
 
-    # Render proxy bypass for direct request
+    # Render proxy bypass
     response = requests.post(url, headers=headers, json=payload, proxies={"http": "", "https": ""})
     
     if response.status_code != 200:
         raise Exception(f"Groq API Error {response.status_code}: {response.text}")
         
     return response.json()["choices"][0]["message"]["content"]
-
 
 @app.route("/api/health", methods=["GET"])
 def health():
