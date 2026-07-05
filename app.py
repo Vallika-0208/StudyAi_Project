@@ -47,8 +47,7 @@ load_dotenv()
 
 app = Flask(__name__)
 
-# Enable CORS for all routes (configured to allow local web development origins)
-# పాత లైన్ ని తీసేసి, యాప్ లో ఉన్న అన్ని రూట్లకు పర్మిషన్ ఇవ్వడానికి ఇలా మార్చండి:
+# Enable CORS for all routes
 CORS(app, resources={r"/*": {"origins": "*"}})
 
 # Read Groq API key from environment
@@ -162,8 +161,8 @@ def extract_text_from_file(file_bytes, filename):
                 if page_text:
                     text += page_text + "\n"
             return text
-        except Exception as e:
-            raise ValueError(f"Failed to parse PDF: {str(e)}")
+        except Exception g_pdf:
+            raise ValueError(f"Failed to parse PDF: {str(g_pdf)}")
     elif ext in ["docx", "doc"]:
         try:
             doc = docx.Document(io.BytesIO(file_bytes))
@@ -211,7 +210,6 @@ def chat():
     if not messages:
         messages = [{"role": "user", "content": prompt}]
 
-    # Prepend a system message to guide LLaMA as a Study Coach
     system_msg = {
         "role": "system",
         "content": (
@@ -220,11 +218,7 @@ def chat():
             "Explain complex concepts simply, use analogies, and break down problems step-by-step. "
             "Be conversational, concise, and structured. "
             "At the very end of your response, always provide exactly 3 suggested follow-up questions "
-            "that the student might want to ask next, prefixed exactly with the text 'Suggested Questions:' and one per line, e.g.:\n"
-            "Suggested Questions:\n"
-            "1. Can you give me a real-world example of this?\n"
-            "2. How does this connect to the main topic?\n"
-            "3. Could you quiz me on this specific part?"
+            "that the student might want to ask next, prefixed exactly with the text 'Suggested Questions:' and one per line."
         )
     }
 
@@ -233,6 +227,7 @@ def chat():
     try:
         client = Groq(
              api_key=api_key,
+             http_client=httpx.Client(proxies={})
         )
         completion = client.chat.completions.create(
             model="llama-3.3-70b-versatile",
@@ -255,7 +250,6 @@ def upload_material():
     text = ""
     filename = ""
     
-    # Check if a file was uploaded via multipart/form-data
     if "file" in request.files:
         file = request.files["file"]
         if file.filename == "":
@@ -263,7 +257,6 @@ def upload_material():
         
         filename = file.filename
         
-        # Check size: limit to 10MB
         file.seek(0, os.SEEK_END)
         size = file.tell()
         file.seek(0)
@@ -279,7 +272,6 @@ def upload_material():
         except Exception as e:
             return jsonify({"error": f"Failed to parse uploaded file: {str(e)}"}), 400
     else:
-        # Check if text was pasted manually via JSON
         data = request.json or {}
         text = data.get("text")
         filename = data.get("filename", "manual_input.txt")
@@ -287,7 +279,6 @@ def upload_material():
         if not text:
             return jsonify({"error": "No file uploaded or manual text content provided"}), 400
 
-    # Save to storage (Firestore or local fallback JSON)
     material_id = str(uuid.uuid4())
     success = save_material(material_id, text, filename)
     
@@ -329,26 +320,11 @@ def generate_summary():
     try:
         client = Groq(
               api_key=api_key,
+              http_client=httpx.Client(proxies={})
         )
         system_prompt = (
             "You are an expert academic tutor. Generate a highly structured study summary based on the text provided by the user. "
-            "The summary MUST contain the following sections in clean Markdown format:\n\n"
-            "# Topic Overview\n"
-            "Provide a concise, high-level overview of the topic.\n\n"
-            "# Key Concepts\n"
-            "Outline the primary key concepts using bullet points.\n\n"
-            "# Definitions\n"
-            "Define the major terms and concepts introduced in the text.\n\n"
-            "# Important Formula Sheet\n"
-            "List any mathematical formulas, chemical equations, or key quantitative relationships if applicable. "
-            "If none are applicable, explicitly state 'No formulas applicable'.\n\n"
-            "# Bullet Point Notes\n"
-            "List key takeaways and core information in bullet points.\n\n"
-            "# Revision Notes\n"
-            "Write structured, easy-to-read revision notes.\n\n"
-            "# Exam Tips\n"
-            "Provide actionable exam tips, common pitfalls, and preparation recommendations.\n\n"
-            "Do not include any conversational intro or outro text. Output only the markdown summary."
+            "The summary MUST contain sections: # Topic Overview, # Key Concepts, # Definitions, # Important Formula Sheet, # Bullet Point Notes, # Revision Notes, # Exam Tips."
         )
         
         completion = client.chat.completions.create(
@@ -385,7 +361,7 @@ def generate_quiz():
     text = data.get("text")
     difficulty = data.get("difficulty", "medium")
     num_questions = int(data.get("num_questions", 5))
-    quiz_type = data.get("quiz_type", "mcq") # 'mcq' | 'tf' | 'short' | 'mixed'
+    quiz_type = data.get("quiz_type", "mcq")
 
     if material_id:
         material = get_material(material_id)
@@ -399,42 +375,24 @@ def generate_quiz():
     try:
         client = Groq(
              api_key=api_key,
+             http_client=httpx.Client(proxies={})
         )
      
         system_prompt = (
             f"You are an expert educator. Generate a JSON object containing a 'quiz' key.\n"
-            f"The 'quiz' value must be a list of exactly {num_questions} questions based on the text provided by the user.\n"
+            f"The 'quiz' value must be a list of exactly {num_questions} questions based on the text provided.\n"
             f"The quiz difficulty must be {difficulty} level.\n"
-            f"The quiz format must be {quiz_type} (where 'mcq' means multiple choice questions, 'tf' means True/False questions, 'short' means short answer questions, and 'mixed' is a blend of all three).\n\n"
-            f"Each question must be an object with the following keys:\n"
-            f"- 'type': the question type ('mcq', 'tf', or 'short')\n"
-            f"- 'question': the question text\n"
-            f"- 'topic': a specific, short sub-topic category label (e.g. 'Photosynthesis', 'Mitosis', 'Newtonian Mechanics') for weak area tracking\n"
-            f"- 'explanation': a brief explanation of the correct answer\n"
+            f"The quiz format must be {quiz_type}.\n"
         )
         
         if quiz_type == "mcq":
-            system_prompt += (
-                "- 'options': an array of exactly 4 string options\n"
-                "- 'answer': the correct answer, which must match one of the options exactly\n"
-            )
+            system_prompt += "- 'options': array of 4 strings\n- 'answer': matching one option\n"
         elif quiz_type == "tf":
-            system_prompt += (
-                "- 'options': ['True', 'False']\n"
-                "- 'answer': the correct answer, which must be either 'True' or 'False'\n"
-            )
+            system_prompt += "- 'options': ['True', 'False']\n- 'answer': 'True' or 'False'\n"
         elif quiz_type == "short":
-            system_prompt += (
-                "- 'answer': a brief correct answer string or key points to compare against\n"
-            )
-        else: # mixed
-            system_prompt += (
-                "For mcq questions, include keys: 'options' (array of 4 strings) and 'answer' (matching one option exactly).\n"
-                "For tf questions, include keys: 'options' (['True', 'False']) and 'answer' ('True' or 'False').\n"
-                "For short questions, include key: 'answer' (model answer/key points).\n"
-            )
+            system_prompt += "- 'answer': brief answer string\n"
             
-        system_prompt += "\nOnly return the raw JSON object. Do not wrap in markdown code blocks."
+        system_prompt += "\nOnly return the raw JSON object."
         
         completion = client.chat.completions.create(
             model="llama-3.3-70b-versatile",
@@ -449,15 +407,13 @@ def generate_quiz():
         raw_response = completion.choices[0].message.content
         quiz_data = json.loads(raw_response)
         return jsonify(quiz_data)
-    except json.JSONDecodeError as je:
-        return jsonify({"error": f"Failed to parse LLM response as JSON: {str(je)}", "raw": raw_response}), 500
     except Exception as e:
         return jsonify({"error": f"Failed to generate quiz: {str(e)}"}), 500
 
 
 @app.route("/api/generate-flashcards", methods=["POST"])
 def generate_flashcards():
-    """Accepts text or material_id and generates a list of 8 flashcards with difficulty and topics."""
+    """Accepts text or material_id and generates a list of flashcards using LLaMA 3.3."""
     global api_key
     if not api_key:
         api_key = os.environ.get("GROQ_API_KEY")
@@ -481,17 +437,11 @@ def generate_flashcards():
     try:
         client = Groq(
              api_key=api_key,
+             http_client=httpx.Client(proxies={})
         )
         system_prompt = (
-            "You are an expert tutor. Generate a JSON object containing a 'flashcards' key. "
-            "The 'flashcards' value must be a list of exactly 8 flashcards based on the key concepts in the text provided. "
-            "Each flashcard must be an object with the following keys:\n"
-            "- 'id': a unique identifier string\n"
-            "- 'front': a core concept, key term, or question\n"
-            "- 'back': its explanation, definition, or answer\n"
-            "- 'difficulty': default difficulty classification ('easy', 'medium', or 'hard')\n"
-            "- 'topic': a short sub-topic category label\n"
-            "Only return the raw JSON object. Do not wrap in markdown code blocks."
+            "You are an expert tutor. Generate a JSON object containing a 'flashcards' key with 8 cards. "
+            "Keys per card: 'id', 'front', 'back', 'difficulty', 'topic'."
         )
         
         completion = client.chat.completions.create(
@@ -506,16 +456,7 @@ def generate_flashcards():
         
         raw_response = completion.choices[0].message.content
         flash_data = json.loads(raw_response)
-        
-        # Ensure cards have unique IDs
-        if "flashcards" in flash_data:
-            for idx, card in enumerate(flash_data["flashcards"]):
-                if "id" not in card or not card["id"]:
-                    card["id"] = f"fc-{uuid.uuid4().hex[:6]}-{idx}"
-                    
         return jsonify(flash_data)
-    except json.JSONDecodeError as je:
-        return jsonify({"error": f"Failed to parse LLM response as JSON: {str(je)}", "raw": raw_response}), 500
     except Exception as e:
         return jsonify({"error": f"Failed to generate flashcards: {str(e)}"}), 500
 
@@ -546,23 +487,9 @@ def generate_planner():
     try:
         client = Groq(
              api_key=api_key,
+             http_client=httpx.Client(proxies={})
         )
-        system_prompt = (
-            "You are an expert academic advisor. Generate a JSON object containing a 'planner' key.\n"
-            "The 'planner' value must be an intelligent 7-day study plan based on the key topics in the text provided.\n"
-            "Structure the plan as an array of exactly 7 objects (one for each day), with each object containing:\n"
-            "- 'day': e.g. 'Day 1'\n"
-            "- 'tasks': an array of study tasks, each task object containing:\n"
-            "  - 'id': a unique string identifier\n"
-            "  - 'task': the task description (specific, actionable, e.g., 'Review formula sheet for Newtonian equations')\n"
-            "  - 'duration': study duration in minutes (e.g. 45)\n"
-            "  - 'break_duration': break duration in minutes (e.g. 10)\n"
-            "  - 'priority': 'High' | 'Medium' | 'Low'\n"
-            "  - 'type': 'Study' | 'Revision' | 'Weak Topic Revision'\n"
-            "  - 'completed': false (default boolean)\n"
-            "- 'ai_tips': a list of 1 or 2 specific advice strings for that day's load\n\n"
-            "Only return the raw JSON object. Do not wrap in markdown code blocks."
-        )
+        system_prompt = "You are an expert academic advisor. Generate a JSON object containing a 'planner' key for 7 days."
         
         completion = client.chat.completions.create(
             model="llama-3.3-70b-versatile",
@@ -576,23 +503,16 @@ def generate_planner():
         
         raw_response = completion.choices[0].message.content
         planner_data = json.loads(raw_response)
-        
-        # Save to database
         save_db_item("planner", "current_plan", planner_data)
-        
         return jsonify(planner_data)
-    except json.JSONDecodeError as je:
-        return jsonify({"error": f"Failed to parse LLM response as JSON: {str(je)}", "raw": raw_response}), 500
     except Exception as e:
         return jsonify({"error": f"Failed to generate study planner: {str(e)}"}), 500
 
 
 @app.route("/api/quiz-history", methods=["GET", "POST"])
 def quiz_history():
-    """Stores a quiz result or fetches history of past quizzes."""
     if request.method == "POST":
         data = request.json or {}
-        # Expect keys: score, total, difficulty, quiz_type, weak_topics
         data["id"] = str(uuid.uuid4())
         data["timestamp"] = datetime.datetime.now().isoformat()
         save_db_item("quiz_history", data["id"], data)
@@ -605,10 +525,8 @@ def quiz_history():
 
 @app.route("/api/flashcards", methods=["GET", "POST"])
 def flashcards():
-    """Stores the flashcard deck state or fetches a deck."""
     if request.method == "POST":
         data = request.json or {}
-        # Expect keys: material_id, cards_list, learned_card_ids
         deck_id = data.get("material_id") or "current_deck"
         data["id"] = deck_id
         data["timestamp"] = datetime.datetime.now().isoformat()
@@ -622,10 +540,8 @@ def flashcards():
 
 @app.route("/api/planner", methods=["GET", "POST"])
 def planner():
-    """Stores the active study planner state or fetches the active plan."""
     if request.method == "POST":
         data = request.json or {}
-        # Expect keys: planner_data (which matches the structure of generate-planner)
         plan_id = "current_plan"
         data["id"] = plan_id
         data["timestamp"] = datetime.datetime.now().isoformat()
@@ -638,7 +554,6 @@ def planner():
 
 @app.route("/api/analytics", methods=["GET", "POST"])
 def analytics():
-    """Manages study analytics data, blending saved records with automated aggregates."""
     if request.method == "POST":
         data = request.json or {}
         analytics_id = "current_analytics"
@@ -650,13 +565,12 @@ def analytics():
         analytics_data = get_db_item("analytics", "current_analytics")
         if not analytics_data:
             analytics_data = {
-                "weekly_hours": [2.0, 3.5, 1.5, 4.0, 3.0, 5.0, 2.5],  # Mon-Sun default
+                "weekly_hours": [2.0, 3.5, 1.5, 4.0, 3.0, 5.0, 2.5],
                 "streak": 5,
                 "total_study_time": 21.5,
                 "flashcards_learned": 0
             }
         
-        # Calculate aggregates from quiz history
         quizzes = list_db_items("quiz_history")
         quizzes.sort(key=lambda x: x.get("timestamp", ""))
         
@@ -672,7 +586,6 @@ def analytics():
             total_score += score
             total_questions += total
             
-            # Extract weak topics from incorrect topic tags
             for topic in q.get("weak_topics", []):
                 weak_topics[topic] = weak_topics.get(topic, 0) + 1
         
@@ -704,21 +617,12 @@ def generate_insights():
     weak_topics = data.get("weak_topics", [])
     weekly_hours = data.get("weekly_hours", [])
 
-    prompt = (
-        f"Based on a student's StudyAI analytics:\n"
-        f"- Average Quiz Score: {avg_score}%\n"
-        f"- Current Study Streak: {streak} days\n"
-        f"- Weak Topics Detected: {', '.join(weak_topics) if weak_topics else 'None'}\n"
-        f"- Weekly Study Hours (Mon-Sun): {weekly_hours}\n\n"
-        f"Generate exactly 3 bullet points of actionable academic insights and guidance tips. "
-        f"Keep them highly personalized, professional, encouraging, and brief (max 20 words per bullet). "
-        f"Do not include intro/outro text or titles. Just output the three bullet points."
-    )
+    prompt = f"Based on student analytics: Avg Score {avg_score}%, Streak {streak} days. Generate 3 tips."
 
     try:
-        
         client = Groq(
             api_key=api_key,
+            http_client=httpx.Client(proxies={})
         )
         completion = client.chat.completions.create(
             model="llama-3.3-70b-versatile",
@@ -732,10 +636,11 @@ def generate_insights():
         return jsonify({"error": f"Failed to generate AI insights: {str(e)}"}), 500
 
 
+@app.route('/')
+def home():
+    return "Backend Server is Running Successfully on Render!"
+
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     print(f"Starting Flask server on port {port}...")
     app.run(host="0.0.0.0", port=port, debug=True)
-@app.route('/')
-def home():
-    return "Backend Server is Running Successfully on Render!"
