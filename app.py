@@ -161,7 +161,7 @@ def extract_text_from_file(file_bytes, filename):
                 if page_text:
                     text += page_text + "\n"
             return text
-        except Exception g_pdf:
+        except Exception as g_pdf:
             raise ValueError(f"Failed to parse PDF: {str(g_pdf)}")
     elif ext in ["docx", "doc"]:
         try:
