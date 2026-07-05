@@ -1,20 +1,12 @@
 import os
 import sys
-os.environ.pop("HTTP_PROXY", None)
-os.environ.pop("HTTPS_PROXY", None)
-os.environ.pop("http_proxy", None)
-os.environ.pop("https_proxy", None)
-os.environ.pop("ALL_PROXY", None)
-os.environ.pop("all_proxy", None)
-
-import httpx
+import requests
 import io
 import uuid
 import json
 import datetime
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from groq import Groq
 from dotenv import load_dotenv
 from pypdf import PdfReader
 import docx
@@ -60,12 +52,10 @@ api_key = os.environ.get("GROQ_API_KEY")
 LOCAL_DB_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
 
 def ensure_local_db():
-    """Ensure directory exists."""
     if not os.path.exists(LOCAL_DB_DIR):
         os.makedirs(LOCAL_DB_DIR)
 
 def get_local_data(filename):
-    """Read data from a local JSON file."""
     ensure_local_db()
     path = os.path.join(LOCAL_DB_DIR, filename)
     if not os.path.exists(path):
@@ -78,7 +68,6 @@ def get_local_data(filename):
         return {}
 
 def save_local_data(filename, data):
-    """Write data to a local JSON file."""
     ensure_local_db()
     path = os.path.join(LOCAL_DB_DIR, filename)
     try:
@@ -90,7 +79,6 @@ def save_local_data(filename, data):
         return False
 
 def save_db_item(collection, item_id, item_data):
-    """Save item to Firestore if active, otherwise local JSON file."""
     if firebase_initialized and db:
         try:
             db.collection(collection).document(item_id).set(item_data)
@@ -98,14 +86,12 @@ def save_db_item(collection, item_id, item_data):
         except Exception as e:
             print(f"Error writing to Firestore collection '{collection}': {e}. Attempting local write.")
             
-    # Save locally
     local_file = f"{collection}.json"
     local_data = get_local_data(local_file)
     local_data[item_id] = item_data
     return save_local_data(local_file, local_data)
 
 def get_db_item(collection, item_id):
-    """Retrieve item by ID from Firestore or local JSON file."""
     if firebase_initialized and db:
         try:
             doc = db.collection(collection).document(item_id).get()
@@ -119,7 +105,6 @@ def get_db_item(collection, item_id):
     return local_data.get(item_id)
 
 def list_db_items(collection):
-    """List all items in a Firestore collection or local JSON file."""
     if firebase_initialized and db:
         try:
             docs = db.collection(collection).stream()
@@ -130,13 +115,6 @@ def list_db_items(collection):
     local_file = f"{collection}.json"
     local_data = get_local_data(local_file)
     return list(local_data.values())
-
-# Deprecated compatibility wrappers
-def get_material_local(material_id):
-    return get_db_item("materials", material_id)
-
-def save_material_local(material_id, material_data):
-    return save_db_item("materials", material_id, material_data)
 
 def save_material(material_id, text, filename):
     material_data = {
@@ -151,7 +129,6 @@ def get_material(material_id):
     return get_db_item("materials", material_id)
 
 def extract_text_from_file(file_bytes, filename):
-    """Helper to extract text from PDF, DOCX, and TXT files."""
     ext = filename.split(".")[-1].lower()
     if ext == "txt":
         return file_bytes.decode("utf-8", errors="ignore")
@@ -178,31 +155,50 @@ def extract_text_from_file(file_bytes, filename):
     else:
         raise ValueError(f"Unsupported file format: .{ext}")
 
+# Helper to communicate directly with Groq API via requests (Bypassing bug)
+def call_groq_api(messages, temperature=0.7, max_tokens=1024, response_format=None):
+    global api_key
+    if not api_key:
+        api_key = os.environ.get("GROQ_API_KEY")
+    
+    if not api_key:
+        raise ValueError("Groq API Key is not configured.")
+        
+    url = "https://api.groq.com/openai/v1/chat/completions"
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json"
+    }
+    payload = {
+        "model": "llama-3.3-70b-versatile",
+        "messages": messages,
+        "temperature": temperature,
+        "max_tokens": max_tokens
+    }
+    if response_format:
+        payload["response_format"] = response_format
+
+    # Render proxy bypass for direct request
+    response = requests.post(url, headers=headers, json=payload, proxies={"http": "", "https": ""})
+    
+    if response.status_code != 200:
+        raise Exception(f"Groq API Error {response.status_code}: {response.text}")
+        
+    return response.json()["choices"][0]["message"]["content"]
+
 
 @app.route("/api/health", methods=["GET"])
 def health():
-    """Health check endpoint to verify backend status and API configuration."""
-    status = "healthy"
-    has_api_key = bool(api_key)
-    
     return jsonify({
-        "status": status,
-        "groq_configured": has_api_key,
+        "status": "healthy",
+        "groq_configured": bool(os.environ.get("GROQ_API_KEY")),
         "firebase_configured": firebase_initialized,
         "model": "llama-3.3-70b-versatile",
-        "message": "Flask backend is running successfully!"
+        "message": "Flask backend bypassing library bugs successfully!"
     })
 
 @app.route("/api/chat", methods=["POST"])
 def chat():
-    """Chat endpoint to query LLaMA 3.3 via Groq API, styled as an academic coach."""
-    global api_key
-    if not api_key:
-        api_key = os.environ.get("GROQ_API_KEY")
-
-    if not api_key:
-        return jsonify({"error": "Groq API Key is not configured."}), 500
-
     data = request.json or {}
     messages = data.get("messages")
     prompt = data.get("prompt")
@@ -224,20 +220,10 @@ def chat():
             "that the student might want to ask next, prefixed exactly with the text 'Suggested Questions:' and one per line."
         )
     }
-
     full_messages = [system_msg] + messages
 
     try:
-        client = Groq(
-             api_key=api_key
-        )
-        completion = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
-            messages=full_messages,
-            temperature=0.7,
-            max_tokens=1024,
-        )
-        response_text = completion.choices[0].message.content
+        response_text = call_groq_api(full_messages, temperature=0.7, max_tokens=1024)
         return jsonify({
             "response": response_text,
             "model": "llama-3.3-70b-versatile"
@@ -248,24 +234,18 @@ def chat():
 
 @app.route("/api/upload-material", methods=["POST"])
 def upload_material():
-    """Extracts text from PDF, DOCX, TXT or manual input and saves it under a unique ID."""
     text = ""
     filename = ""
-    
     if "file" in request.files:
         file = request.files["file"]
         if file.filename == "":
             return jsonify({"error": "Selected file has no name"}), 400
-        
         filename = file.filename
-        
         file.seek(0, os.SEEK_END)
         size = file.tell()
         file.seek(0)
-        
         if size > 10 * 1024 * 1024:
             return jsonify({"error": "File size exceeds 10MB limit."}), 400
-            
         try:
             file_bytes = file.read()
             text = extract_text_from_file(file_bytes, filename)
@@ -277,13 +257,11 @@ def upload_material():
         data = request.json or {}
         text = data.get("text")
         filename = data.get("filename", "manual_input.txt")
-        
         if not text:
             return jsonify({"error": "No file uploaded or manual text content provided"}), 400
 
     material_id = str(uuid.uuid4())
     success = save_material(material_id, text, filename)
-    
     if not success:
         return jsonify({"error": "Failed to save material to database"}), 500
 
@@ -298,14 +276,6 @@ def upload_material():
 
 @app.route("/api/generate-summary", methods=["POST"])
 def generate_summary():
-    """Generates a comprehensive study summary based on material_id or raw text using LLaMA 3.3."""
-    global api_key
-    if not api_key:
-        api_key = os.environ.get("GROQ_API_KEY")
-
-    if not api_key:
-        return jsonify({"error": "Groq API Key is not configured."}), 500
-
     data = request.json or {}
     material_id = data.get("material_id")
     text = data.get("text")
@@ -320,25 +290,15 @@ def generate_summary():
         return jsonify({"error": "No text content found to summarize"}), 400
 
     try:
-        client = Groq(
-              api_key=api_key
-        )
         system_prompt = (
             "You are an expert academic tutor. Generate a highly structured study summary based on the text provided by the user. "
             "The summary MUST contain sections: # Topic Overview, # Key Concepts, # Definitions, # Important Formula Sheet, # Bullet Point Notes, # Revision Notes, # Exam Tips."
         )
-        
-        completion = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": text}
-            ],
-            temperature=0.5,
-            max_tokens=2560
-        )
-        
-        summary = completion.choices[0].message.content
+        msgs = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": text}
+        ]
+        summary = call_groq_api(msgs, temperature=0.5, max_tokens=2560)
         return jsonify({
             "summary": summary,
             "model": "llama-3.3-70b-versatile"
@@ -349,14 +309,6 @@ def generate_summary():
 
 @app.route("/api/generate-quiz", methods=["POST"])
 def generate_quiz():
-    """Accepts text or material_id and generates a custom quiz with specific difficulty, quantity, and type."""
-    global api_key
-    if not api_key:
-        api_key = os.environ.get("GROQ_API_KEY")
-
-    if not api_key:
-        return jsonify({"error": "Groq API Key is not configured."}), 500
-
     data = request.json or {}
     material_id = data.get("material_id")
     text = data.get("text")
@@ -374,17 +326,12 @@ def generate_quiz():
         return jsonify({"error": "Missing 'text' or 'material_id' in request body"}), 400
 
     try:
-        client = Groq(
-             api_key=api_key
-        )
-     
         system_prompt = (
             f"You are an expert educator. Generate a JSON object containing a 'quiz' key.\n"
             f"The 'quiz' value must be a list of exactly {num_questions} questions based on the text provided.\n"
             f"The quiz difficulty must be {difficulty} level.\n"
             f"The quiz format must be {quiz_type}.\n"
         )
-        
         if quiz_type == "mcq":
             system_prompt += "- 'options': array of 4 strings\n- 'answer': matching one option\n"
         elif quiz_type == "tf":
@@ -394,17 +341,11 @@ def generate_quiz():
             
         system_prompt += "\nOnly return the raw JSON object."
         
-        completion = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": text}
-            ],
-            temperature=0.5,
-            response_format={"type": "json_object"}
-        )
-        
-        raw_response = completion.choices[0].message.content
+        msgs = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": text}
+        ]
+        raw_response = call_groq_api(msgs, temperature=0.5, max_tokens=2048, response_format={"type": "json_object"})
         quiz_data = json.loads(raw_response)
         return jsonify(quiz_data)
     except Exception as e:
@@ -413,14 +354,6 @@ def generate_quiz():
 
 @app.route("/api/generate-flashcards", methods=["POST"])
 def generate_flashcards():
-    """Accepts text or material_id and generates a list of flashcards using LLaMA 3.3."""
-    global api_key
-    if not api_key:
-        api_key = os.environ.get("GROQ_API_KEY")
-
-    if not api_key:
-        return jsonify({"error": "Groq API Key is not configured."}), 500
-
     data = request.json or {}
     material_id = data.get("material_id")
     text = data.get("text")
@@ -435,25 +368,15 @@ def generate_flashcards():
         return jsonify({"error": "Missing 'text' or 'material_id' in request body"}), 400
 
     try:
-        client = Groq(
-             api_key=api_key
-        )
         system_prompt = (
             "You are an expert tutor. Generate a JSON object containing a 'flashcards' key with 8 cards. "
             "Keys per card: 'id', 'front', 'back', 'difficulty', 'topic'."
         )
-        
-        completion = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": text}
-            ],
-            temperature=0.5,
-            response_format={"type": "json_object"}
-        )
-        
-        raw_response = completion.choices[0].message.content
+        msgs = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": text}
+        ]
+        raw_response = call_groq_api(msgs, temperature=0.5, max_tokens=2048, response_format={"type": "json_object"})
         flash_data = json.loads(raw_response)
         return jsonify(flash_data)
     except Exception as e:
@@ -462,14 +385,6 @@ def generate_flashcards():
 
 @app.route("/api/generate-planner", methods=["POST"])
 def generate_planner():
-    """Generates an intelligent 7-day study plan from study material using LLaMA 3.3."""
-    global api_key
-    if not api_key:
-        api_key = os.environ.get("GROQ_API_KEY")
-
-    if not api_key:
-        return jsonify({"error": "Groq API Key is not configured."}), 500
-
     data = request.json or {}
     material_id = data.get("material_id")
     text = data.get("text")
@@ -484,22 +399,12 @@ def generate_planner():
         return jsonify({"error": "Missing 'text' or 'material_id' in request body"}), 400
 
     try:
-        client = Groq(
-             api_key=api_key
-        )
         system_prompt = "You are an expert academic advisor. Generate a JSON object containing a 'planner' key for 7 days."
-        
-        completion = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": text}
-            ],
-            temperature=0.6,
-            response_format={"type": "json_object"}
-        )
-        
-        raw_response = completion.choices[0].message.content
+        msgs = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": text}
+        ]
+        raw_response = call_groq_api(msgs, temperature=0.6, max_tokens=2048, response_format={"type": "json_object"})
         planner_data = json.loads(raw_response)
         save_db_item("planner", "current_plan", planner_data)
         return jsonify(planner_data)
@@ -601,33 +506,14 @@ def analytics():
 
 @app.route("/api/generate-insights", methods=["POST"])
 def generate_insights():
-    """Queries LLaMA 3.3 to construct study coach insights based on student analytics."""
-    global api_key
-    if not api_key:
-        api_key = os.environ.get("GROQ_API_KEY")
-
-    if not api_key:
-        return jsonify({"error": "Groq API Key is not configured."}), 500
-
     data = request.json or {}
     avg_score = data.get("avg_score", 0)
     streak = data.get("streak", 0)
-    weak_topics = data.get("weak_topics", [])
-    weekly_hours = data.get("weekly_hours", [])
-
     prompt = f"Based on student analytics: Avg Score {avg_score}%, Streak {streak} days. Generate 3 tips."
 
     try:
-        client = Groq(
-            api_key=api_key
-        )
-        completion = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
-            messages=[{"role": "user", "content": prompt}],
-            temperature=0.7,
-            max_tokens=500
-        )
-        insights = completion.choices[0].message.content
+        msgs = [{"role": "user", "content": prompt}]
+        insights = call_groq_api(msgs, temperature=0.7, max_tokens=500)
         return jsonify({"insights": insights})
     except Exception as e:
         return jsonify({"error": f"Failed to generate AI insights: {str(e)}"}), 500
@@ -635,9 +521,9 @@ def generate_insights():
 
 @app.route('/')
 def home():
-    return "Backend Server is Running Successfully on Render!"
+    return "Backend Server is Running Successfully on Render (Direct API Bypass Mode)!"
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
-    print(f"Starting Flask server on port {port}...")
     app.run(host="0.0.0.0", port=port, debug=True)
+       
